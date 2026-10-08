@@ -87,7 +87,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/* ===== NAVIGASI ===== */
+/* ===== NAVIGATION ===== */
 function goHome() {
   stopTimer();
   state.view = "home";
@@ -200,7 +200,7 @@ async function loadQuestions() {
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    if (!data.questions || !data.questions.length) throw new Error("Tiada soalan diterima.");
+    if (!data.questions || !data.questions.length) throw new Error("No questions received.");
 
     const startIdx = state.questions.length;
     const newQs = data.questions.map((q, i) => ({ ...q, id: startIdx + i + 1 }));
@@ -210,7 +210,7 @@ async function loadQuestions() {
     render();
   } catch (err) {
     state.loading = false;
-    state.error = err.message || "Gagal memuatkan soalan. Sila tunggu sebentar dan cuba lagi.";
+    state.error = err.message || "Failed to load questions. Please wait a moment and try again.";
     render();
   }
 }
@@ -237,7 +237,7 @@ async function loadExplanation(qIndex) {
     state.explanations[qIndex] = data.explanation;
     saveProgress();
   } catch (err) {
-    state.explanations[qIndex] = "Ralat: " + (err.message || "Gagal memuatkan huraian.");
+    state.explanations[qIndex] = "Error: " + (err.message || "Failed to load explanation.");
   } finally {
     state.loading = false;
     render();
@@ -262,14 +262,14 @@ async function loadTextbook() {
     if (data.error) throw new Error(data.error);
     state.textbookContent = data.notes;
   } catch (err) {
-    state.error = err.message || "Gagal memuatkan buku teks. Sila tunggu sebentar dan cuba lagi.";
+    state.error = err.message || "Failed to load textbook. Please wait a moment and try again.";
   } finally {
     state.loading = false;
     render();
   }
 }
 
-/* ===== JAWAPAN ===== */
+/* ===== ANSWER ===== */
 function selectAnswer(letter) {
   const i = state.currentIndex;
   const q = state.questions[i];
@@ -403,14 +403,14 @@ function renderHome() {
         <div class="panel" style="border-color: var(--accent); background: var(--accent-soft);">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
             <div>
-              <h2>Sambung Sesi</h2>
+              <h2>Resume Session</h2>
               <p class="sub-text" style="margin:0;">
-                ${subj.name} · ${saved.mode === "exam" ? "Mod Peperiksaan" : "Mod Latihan"} · Soalan ${saved.currentIndex + 1} dari ${saved.questions.length}
+                ${subj.name} · ${saved.mode === "exam" ? "Exam Mode" : "Practice Mode"} · Question ${saved.currentIndex + 1} of ${saved.questions.length}
               </p>
             </div>
             <div class="btn-row">
-              <button class="btn btn-primary" onclick="resumeSession()">Sambung</button>
-              <button class="btn" onclick="discardSession()">Buang</button>
+              <button class="btn btn-primary" onclick="resumeSession()">Resume</button>
+              <button class="btn" onclick="discardSession()">Discard</button>
             </div>
           </div>
         </div>
@@ -421,16 +421,16 @@ function renderHome() {
   return `
     <div class="hero">
       <h1>STPM Pro</h1>
-      <p>Platform persediaan peperiksaan · 5 subjek · Dikuasakan AI</p>
+      <p>Exam preparation platform · 5 subjects · AI-powered</p>
     </div>
     ${resumeBanner}
     <div class="panel" style="margin-bottom:22px;">
       <div class="btn-row between" style="align-items:center;">
         <div>
-          <h2>Kemajuan Anda</h2>
-          <p class="sub-text" style="margin:0;">Jejak prestasi merentas subjek</p>
+          <h2>Your Progress</h2>
+          <p class="sub-text" style="margin:0;">Track your performance across subjects</p>
         </div>
-        <button class="btn" onclick="state.view='stats'; render();">Lihat Statistik</button>
+        <button class="btn" onclick="state.view='stats'; render();">View Stats</button>
       </div>
     </div>
     <div class="subject-grid">
@@ -441,7 +441,7 @@ function renderHome() {
           <div class="subject-card" onclick="selectSubject('${s.id}')">
             <div class="s-icon">${s.icon}</div>
             <h3>${s.name}</h3>
-            <p>${pct !== null ? `${pct}% ketepatan · ${st.total} dicuba` : "Belum bermula"}</p>
+            <p>${pct !== null ? `${pct}% accuracy · ${st.total} attempted` : "Not started"}</p>
           </div>
         `;
       }).join("")}
@@ -456,12 +456,12 @@ function renderSubject() {
   return `
     <div class="hero" style="text-align:left; margin-bottom:22px;">
       <h1 style="font-size:1.55rem;">${subj.name}</h1>
-      <p>${stats && stats.total > 0 ? `Ketepatan: ${Math.round((stats.correct/stats.total)*100)}% (${stats.correct}/${stats.total})` : "Belum ada cubaan"}</p>
+      <p>${stats && stats.total > 0 ? `Accuracy: ${Math.round((stats.correct/stats.total)*100)}% (${stats.correct}/${stats.total})` : "No attempts yet"}</p>
     </div>
 
     <div class="panel">
-      <h2>Pilih Semester</h2>
-      <p class="sub-text">Pilih semester yang anda ingin fokuskan</p>
+      <h2>Select Semester</h2>
+      <p class="sub-text">Choose the semester you want to focus on</p>
       <div class="btn-row">
         ${SEMESTERS.map(sem => `
           <button class="btn ${state.semester === sem ? 'btn-primary' : ''}" onclick="setSemester('${sem}')">
@@ -472,18 +472,18 @@ function renderSubject() {
     </div>
 
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('practice')">Latihan & Peperiksaan</button>
-      <button class="tab" onclick="switchTab('textbook')">Buku Teks</button>
+      <button class="tab active" onclick="switchTab('practice')">Practice & Exam</button>
+      <button class="tab" onclick="switchTab('textbook')">Textbook</button>
     </div>
 
     <div class="mode-grid">
       <div class="mode-card" onclick="selectMode('practice')">
-        <h3>Mod Latihan</h3>
-        <p>100 soalan · Maklum balas segera · Huraian · Tiada had masa</p>
+        <h3>Practice Mode</h3>
+        <p>100 questions · Instant feedback · Explanations · No time limit</p>
       </div>
       <div class="mode-card" onclick="selectMode('exam')">
-        <h3>Mod Peperiksaan</h3>
-        <p>100 soalan · Pemasa 90 minit · Tiada maklum balas sehingga hantar</p>
+        <h3>Exam Mode</h3>
+        <p>100 questions · 90 minute timer · No feedback until submission</p>
       </div>
     </div>
   `;
@@ -491,16 +491,16 @@ function renderSubject() {
 
 function renderPractice() {
   if (state.loading && state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Menjana soalan...</div>`;
+    return `<div class="loading-box"><div class="loader"></div> Generating questions...</div>`;
   }
   if (state.error) {
     return `
       <div class="alert error">${escapeHtml(state.error)}</div>
-      <button class="btn btn-primary" onclick="loadQuestions()">Cuba Lagi</button>
+      <button class="btn btn-primary" onclick="loadQuestions()">Retry</button>
     `;
   }
   if (state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Memuatkan...</div>`;
+    return `<div class="loading-box"><div class="loader"></div> Loading...</div>`;
   }
 
   const i = state.currentIndex;
@@ -513,9 +513,9 @@ function renderPractice() {
 
   return `
     <div class="q-header">
-      <span>Soalan <strong>${i + 1}</strong> dari ${total}</span>
+      <span>Question <strong>${i + 1}</strong> of ${total}</span>
       <button class="btn" style="padding:6px 13px; font-size:0.8rem;" onclick="toggleFlag()">
-        ${flagged ? "★ Ditanda" : "☆ Tanda"}
+        ${flagged ? "★ Flagged" : "☆ Flag"}
       </button>
     </div>
     <div class="q-progress"><div class="q-progress-fill" style="width:${progressPct}%"></div></div>
@@ -540,37 +540,37 @@ function renderPractice() {
 
       ${!revealed ? `
         <div class="btn-row" style="margin-top:18px;">
-          <button class="btn btn-primary" onclick="revealAnswer()" ${!state.answers[i] ? 'disabled' : ''}>Tunjuk Jawapan</button>
+          <button class="btn btn-primary" onclick="revealAnswer()" ${!state.answers[i] ? 'disabled' : ''}>Show Answer</button>
         </div>
       ` : `
         <div class="btn-row" style="margin-top:18px;">
-          <button class="btn btn-primary" onclick="loadExplanation(${i})">${explanation ? "Segarkan Huraian" : "Huraikan"}</button>
+          <button class="btn btn-primary" onclick="loadExplanation(${i})">${explanation ? "Refresh Explanation" : "Explain"}</button>
         </div>
       `}
 
       ${explanation ? `<div class="explanation">${escapeHtml(explanation)}</div>` : ""}
-      ${revealed && state.loading && !explanation ? `<div class="loading-box"><div class="loader"></div> Memuatkan huraian...</div>` : ""}
+      ${revealed && state.loading && !explanation ? `<div class="loading-box"><div class="loader"></div> Loading explanation...</div>` : ""}
     </div>
 
     <div class="btn-row between">
-      <button class="btn" onclick="prevQuestion()" ${i === 0 ? "disabled" : ""}>← Sebelum</button>
-      <button class="btn btn-primary" onclick="nextQuestion()" ${i >= state.questions.length - 1 && state.questions.length >= TOTAL_QUESTIONS ? "disabled" : ""}>Seterusnya →</button>
+      <button class="btn" onclick="prevQuestion()" ${i === 0 ? "disabled" : ""}>← Previous</button>
+      <button class="btn btn-primary" onclick="nextQuestion()" ${i >= state.questions.length - 1 && state.questions.length >= TOTAL_QUESTIONS ? "disabled" : ""}>Next →</button>
     </div>
   `;
 }
 
 function renderExam() {
   if (state.loading && state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Menjana soalan peperiksaan...</div>`;
+    return `<div class="loading-box"><div class="loader"></div> Generating exam questions...</div>`;
   }
   if (state.error) {
     return `
       <div class="alert error">${escapeHtml(state.error)}</div>
-      <button class="btn btn-primary" onclick="loadQuestions()">Cuba Lagi</button>
+      <button class="btn btn-primary" onclick="loadQuestions()">Retry</button>
     `;
   }
   if (state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Memuatkan...</div>`;
+    return `<div class="loading-box"><div class="loader"></div> Loading...</div>`;
   }
 
   const i = state.currentIndex;
@@ -582,9 +582,9 @@ function renderExam() {
 
   return `
     <div class="q-header">
-      <span>Soalan <strong>${i + 1}</strong> dari ${total} · Dijawab: ${answered}</span>
+      <span>Question <strong>${i + 1}</strong> of ${total} · Answered: ${answered}</span>
       <button class="btn" style="padding:6px 13px; font-size:0.8rem;" onclick="toggleFlag()">
-        ${flagged ? "★ Ditanda" : "☆ Tanda"}
+        ${flagged ? "★ Flagged" : "☆ Flag"}
       </button>
     </div>
     <div class="q-progress"><div class="q-progress-fill" style="width:${progressPct}%"></div></div>
@@ -604,35 +604,35 @@ function renderExam() {
     </div>
 
     <div class="btn-row between">
-      <button class="btn" onclick="prevQuestion()" ${i === 0 ? "disabled" : ""}>← Sebelum</button>
-      <button class="btn btn-primary" onclick="nextQuestion()" ${i >= total - 1 ? "disabled" : ""}>Seterusnya →</button>
+      <button class="btn" onclick="prevQuestion()" ${i === 0 ? "disabled" : ""}>← Previous</button>
+      <button class="btn btn-primary" onclick="nextQuestion()" ${i >= total - 1 ? "disabled" : ""}>Next →</button>
     </div>
 
     <div style="margin-top:22px; text-align:center;">
-      <button class="btn btn-success" onclick="finishExam()">Hantar Peperiksaan</button>
+      <button class="btn btn-success" onclick="finishExam()">Submit Exam</button>
     </div>
   `;
 }
 
 function renderTextbook() {
   if (state.loading && !state.textbookContent) {
-    return `<div class="loading-box"><div class="loader"></div> Menjana nota buku teks...</div>`;
+    return `<div class="loading-box"><div class="loader"></div> Generating textbook notes...</div>`;
   }
   if (state.error) {
     return `
       <div class="alert error">${escapeHtml(state.error)}</div>
-      <button class="btn btn-primary" onclick="loadTextbook()">Cuba Lagi</button>
+      <button class="btn btn-primary" onclick="loadTextbook()">Retry</button>
     `;
   }
   if (!state.textbookContent) {
-    return `<div class="loading-box"><div class="loader"></div> Memuatkan...</div>`;
+    return `<div class="loading-box"><div class="loader"></div> Loading...</div>`;
   }
 
   return `
     <div class="panel">
       <div class="textbook-content">${escapeHtml(state.textbookContent)}</div>
     </div>
-    <button class="btn" onclick="switchTab('practice')">← Kembali ke Latihan</button>
+    <button class="btn" onclick="switchTab('practice')">← Back to Practice</button>
   `;
 }
 
@@ -655,12 +655,12 @@ function renderResult() {
     <div class="panel">
       <div class="result-score">
         <div class="big">${pct}%</div>
-        <div class="grade">Gred: ${grade} · ${correct} / ${total} betul</div>
+        <div class="grade">Grade: ${grade} · ${correct} / ${total} correct</div>
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="selectSubject('${state.subject.id}')">Kembali ke Subjek</button>
-      <button class="btn" onclick="goHome()">Utama</button>
+      <button class="btn btn-primary" onclick="selectSubject('${state.subject.id}')">Back to Subject</button>
+      <button class="btn" onclick="goHome()">Home</button>
     </div>
   `;
 }
@@ -673,28 +673,28 @@ function renderStats() {
 
   return `
     <div class="hero" style="text-align:left; margin-bottom:22px;">
-      <h1 style="font-size:1.55rem;">Statistik</h1>
-      <p>Gambaran keseluruhan prestasi anda</p>
+      <h1 style="font-size:1.55rem;">Statistics</h1>
+      <p>Your performance overview</p>
     </div>
 
     <div class="stats-grid">
       <div class="stat-box">
-        <div class="label">Jumlah Cubaan</div>
+        <div class="label">Total Attempts</div>
         <div class="value">${totalAttempts}</div>
       </div>
       <div class="stat-box">
-        <div class="label">Betul</div>
+        <div class="label">Correct</div>
         <div class="value green">${totalCorrect}</div>
       </div>
       <div class="stat-box">
-        <div class="label">Ketepatan Keseluruhan</div>
+        <div class="label">Overall Accuracy</div>
         <div class="value">${overallPct}%</div>
       </div>
     </div>
 
     <div class="panel">
-      <h2>Mengikut Subjek</h2>
-      <p class="sub-text">Pecahan mengikut subjek</p>
+      <h2>By Subject</h2>
+      <p class="sub-text">Breakdown per subject</p>
       ${SUBJECTS.map(s => {
         const st = stats[s.id] || { correct: 0, total: 0 };
         const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
@@ -707,9 +707,9 @@ function renderStats() {
       }).join("")}
     </div>
 
-    <button class="btn" onclick="goHome()">← Kembali ke Utama</button>
+    <button class="btn" onclick="goHome()">← Back to Home</button>
   `;
 }
 
-/* ===== MULA ===== */
+/* ===== INIT ===== */
 render();
