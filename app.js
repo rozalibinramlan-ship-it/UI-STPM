@@ -1,716 +1,562 @@
-/* ============================================================
-   STPM PRO — APP LOGIC
-   ============================================================ */
-
-const SUBJECTS = [
-  { id: "physics",   name: "Physics",                code: "PHY",  icon: "⚛" },
-  { id: "biology",   name: "Biology",                code: "BIO",  icon: "🧬" },
-  { id: "addmaths",  name: "Additional Mathematics", code: "AM",   icon: "∑" },
-  { id: "mgmtmaths", name: "Management Mathematics", code: "MM",   icon: "📊" },
-  { id: "chemistry", name: "Chemistry",              code: "CHEM", icon: "⚗" }
-];
-
-const SEMESTERS = ["Semester 1", "Semester 2", "Semester 3"];
-const TOTAL_QUESTIONS = 100;
-const EXAM_DURATION = 90 * 60;
-
-let state = {
-  view: "home",
-  subject: null,
-  semester: "Semester 1",
-  mode: "practice",
-  questions: [],
-  currentIndex: 0,
-  answers: {},
-  flagged: {},
-  revealed: {},
-  explanations: {},
-  batchNumber: 1,
-  loading: false,
-  error: null,
-  timer: EXAM_DURATION,
-  timerInterval: null,
-  textbookContent: null,
-  _recorded: {}
-};
-
-const STORAGE_KEY = "stpm_pro_v1";
-const STATS_KEY = "stpm_pro_stats_v1";
-
-function saveProgress() {
-  const save = {
-    subject: state.subject,
-    semester: state.semester,
-    mode: state.mode,
-    questions: state.questions,
-    currentIndex: state.currentIndex,
-    answers: state.answers,
-    flagged: state.flagged,
-    revealed: state.revealed,
-    explanations: state.explanations,
-    batchNumber: state.batchNumber,
-    savedAt: Date.now()
-  };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(save)); } catch (e) {}
+:root {
+  --bg: #f0f5f1;
+  --bg-2: #e8efe9;
+  --panel: #ffffff;
+  --panel-2: #f7faf8;
+  --border: #d4e0d6;
+  --border-soft: #e3ebe4;
+  --text: #1f2d24;
+  --text-mid: #4a5c50;
+  --text-dim: #7a8c80;
+  --accent: #4a8f5e;
+  --accent-2: #5ea672;
+  --accent-soft: #d9ecdf;
+  --accent-glow: rgba(74, 143, 94, 0.12);
+  --green: #3d8b52;
+  --green-soft: #e3f2e7;
+  --red: #c9584b;
+  --red-soft: #fae7e4;
+  --yellow: #c89b3c;
+  --yellow-soft: #faf1dc;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 3px rgba(31, 45, 36, 0.04), 0 4px 12px rgba(31, 45, 36, 0.04);
+  --shadow-hover: 0 2px 6px rgba(31, 45, 36, 0.06), 0 8px 24px rgba(31, 45, 36, 0.06);
 }
 
-function loadProgress() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) { return null; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-function clearProgress() {
-  localStorage.removeItem(STORAGE_KEY);
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; }
+
+/* ===== HEADER ===== */
+header {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  color: var(--text);
+}
+.brand-mark {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 2px 6px var(--accent-glow);
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
 }
 
-function getStats() {
-  try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {}; }
-  catch { return {}; }
+/* ===== CONTAINER ===== */
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
 }
 
-function recordAnswer(subjectId, isCorrect) {
-  const stats = getStats();
-  if (!stats[subjectId]) stats[subjectId] = { correct: 0, total: 0 };
-  stats[subjectId].total++;
-  if (isCorrect) stats[subjectId].correct++;
-  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+/* ===== HERO ===== */
+.hero { text-align: center; margin-bottom: 40px; }
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.hero p {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 400;
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+/* ===== SUBJECT GRID ===== */
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.subject-card {
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.subject-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.subject-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+.subject-card:hover::before { opacity: 1; }
+.subject-card .s-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 16px;
+  border: 1px solid rgba(74, 143, 94, 0.15);
+}
+.subject-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.subject-card p {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-weight: 400;
 }
 
-/* NAVIGATION */
-function goHome() {
-  stopTimer();
-  state.view = "home";
-  state.subject = null;
-  state.questions = [];
-  state.currentIndex = 0;
-  state.answers = {};
-  state.flagged = {};
-  state.revealed = {};
-  state.explanations = {};
-  state.textbookContent = null;
-  state.error = null;
-  state._recorded = {};
-  render();
+/* ===== PANEL ===== */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 26px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.panel h2 {
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.panel .sub-text {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  font-weight: 400;
 }
 
-function selectSubject(subjectId) {
-  state.subject = SUBJECTS.find(s => s.id === subjectId);
-  state.view = "subject";
-  state.questions = [];
-  state.currentIndex = 0;
-  state.answers = {};
-  state.flagged = {};
-  state.revealed = {};
-  state.explanations = {};
-  state.textbookContent = null;
-  state.batchNumber = 1;
-  state.error = null;
-  state._recorded = {};
-  render();
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 5px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow);
+}
+.tab {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-align: center;
+  letter-spacing: -0.1px;
+}
+.tab:hover { color: var(--text-mid); background: var(--panel-2); }
+.tab.active {
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px var(--accent-glow);
 }
 
-function setSemester(sem) {
-  state.semester = sem;
-  state.textbookContent = null;
-  render();
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-mid);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  letter-spacing: -0.1px;
+}
+.btn:hover:not(:disabled) {
+  background: var(--panel-2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #ffffff;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+.btn-success {
+  background: var(--green);
+  border-color: var(--green);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(61, 139, 82, 0.15);
+}
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-row.between { justify-content: space-between; }
+
+/* ===== MODE CARDS ===== */
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.mode-card {
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+.mode-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.mode-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 7px;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.mode-card p {
+  font-size: 0.83rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  font-weight: 400;
 }
 
-function selectMode(mode) {
-  state.mode = mode;
-  state.view = mode === "exam" ? "exam" : "practice";
-  state.questions = [];
-  state.currentIndex = 0;
-  state.answers = {};
-  state.flagged = {};
-  state.revealed = {};
-  state.explanations = {};
-  state.batchNumber = 1;
-  state.error = null;
-  state._recorded = {};
-  render();
-  loadQuestions();
-  if (mode === "exam") startTimer();
+/* ===== QUESTION ===== */
+.q-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.q-header strong { color: var(--text); font-weight: 600; }
+.q-progress {
+  height: 5px;
+  background: var(--border-soft);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 22px;
+}
+.q-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 3px;
+}
+.q-text {
+  font-size: 1.03rem;
+  line-height: 1.65;
+  margin-bottom: 22px;
+  color: var(--text);
+  font-weight: 500;
 }
 
-function switchTab(tab) {
-  if (tab === "textbook") {
-    state.view = "textbook";
-    render();
-    if (!state.textbookContent && !state.loading) loadTextbook();
-  } else {
-    state.view = "subject";
-    render();
-  }
+/* ===== OPTIONS ===== */
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 15px 17px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-mid);
+}
+.option:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.option.correct {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--text);
+}
+.option.wrong {
+  border-color: var(--red);
+  background: var(--red-soft);
+  color: var(--text);
+}
+.option-letter {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  transition: all 0.18s;
+}
+.option.selected .option-letter {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+.option.correct .option-letter {
+  background: var(--green);
+  border-color: var(--green);
+  color: #ffffff;
+}
+.option.wrong .option-letter {
+  background: var(--red);
+  border-color: var(--red);
+  color: #ffffff;
 }
 
-function resumeSession() {
-  const saved = loadProgress();
-  if (!saved) return;
-  const subj = SUBJECTS.find(s => s.id === saved.subject);
-  if (!subj) return;
-
-  state.subject = subj;
-  state.semester = saved.semester || "Semester 1";
-  state.mode = saved.mode || "practice";
-  state.questions = saved.questions || [];
-  state.currentIndex = saved.currentIndex || 0;
-  state.answers = saved.answers || {};
-  state.flagged = saved.flagged || {};
-  state.revealed = saved.revealed || {};
-  state.explanations = saved.explanations || {};
-  state.batchNumber = saved.batchNumber || 1;
-  state.view = state.mode === "exam" ? "exam" : "practice";
-  state.error = null;
-  state._recorded = {};
-  render();
-  if (state.mode === "exam") startTimer();
+/* ===== EXPLANATION ===== */
+.explanation {
+  margin-top: 18px;
+  padding: 20px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(74, 143, 94, 0.2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  color: var(--text-mid);
+  animation: fadeIn 0.35s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-function discardSession() {
-  clearProgress();
-  goHome();
+/* ===== TEXTBOOK ===== */
+.textbook-content {
+  font-size: 0.93rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--text-mid);
 }
 
-/* API */
-async function loadQuestions() {
-  state.loading = true;
-  state.error = null;
-  render();
-
-  try {
-    const res = await fetch("/api/questions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: state.subject.id,
-        semester: state.semester,
-        batchNumber: state.batchNumber
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    if (!data.questions || !data.questions.length) throw new Error("No questions returned.");
-
-    const startIdx = state.questions.length;
-    const newQs = data.questions.map((q, i) => ({ ...q, id: startIdx + i + 1 }));
-    state.questions = [...state.questions, ...newQs];
-    state.loading = false;
-    saveProgress();
-    render();
-  } catch (err) {
-    state.loading = false;
-    state.error = err.message || "Failed to load questions. Please wait a moment and try again.";
-    render();
-  }
+/* ===== TIMER ===== */
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.timer.warning {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  background: var(--yellow-soft);
+}
+.timer.danger {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-soft);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
 }
 
-async function loadExplanation(qIndex) {
-  if (state.explanations[qIndex]) return;
-
-  state.loading = true;
-  render();
-
-  try {
-    const q = state.questions[qIndex];
-    const res = await fetch("/api/explain", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: state.subject.id,
-        question: q.question,
-        options: q.options,
-        answer: q.answer
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    state.explanations[qIndex] = data.explanation;
-    saveProgress();
-  } catch (err) {
-    state.explanations[qIndex] = "Error: " + (err.message || "Failed to load explanation.");
-  } finally {
-    state.loading = false;
-    render();
-  }
+/* ===== LOADER ===== */
+.loader {
+  display: inline-block;
+  width: 15px; height: 15px;
+  border: 2px solid var(--accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: 50px 20px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-async function loadTextbook() {
-  state.loading = true;
-  state.error = null;
-  render();
+/* ===== STATS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.stat-box {
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.stat-box .label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.stat-box .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.stat-box .value.green { color: var(--green); }
+.stat-box .value.red { color: var(--red); }
 
-  try {
-    const res = await fetch("/api/textbook", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: state.subject.id,
-        semester: state.semester
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    state.textbookContent = data.notes;
-  } catch (err) {
-    state.error = err.message || "Failed to load textbook. Please wait a moment and try again.";
-  } finally {
-    state.loading = false;
-    render();
-  }
+/* ===== RESULT ===== */
+.result-score { text-align: center; padding: 36px 20px; }
+.result-score .big {
+  font-size: 3.8rem;
+  font-weight: 800;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.result-score .grade {
+  font-size: 1rem;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+  font-weight: 500;
 }
 
-/* ANSWER */
-function selectAnswer(letter) {
-  const i = state.currentIndex;
-  const q = state.questions[i];
-  if (!q) return;
-  if (state.mode === "exam" && state.answers[i]) return;
-  if (state.mode === "practice" && state.revealed[i]) return;
-
-  state.answers[i] = letter;
-
-  if (!state._recorded[i]) {
-    state._recorded[i] = true;
-    recordAnswer(state.subject.id, letter === q.answer);
-  }
-  saveProgress();
-  render();
+/* ===== ALERT ===== */
+.alert {
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  margin-bottom: 18px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.alert.error {
+  background: var(--red-soft);
+  border-color: rgba(201, 88, 75, 0.3);
+  color: var(--red);
+}
+.alert.info {
+  background: var(--accent-soft);
+  border-color: rgba(74, 143, 94, 0.3);
+  color: var(--accent);
 }
 
-function revealAnswer() {
-  state.revealed[state.currentIndex] = true;
-  saveProgress();
-  render();
+.hidden { display: none !important; }
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  header { padding: 14px 16px; }
+  .container { padding: 24px 16px 50px; }
+  .hero h1 { font-size: 1.55rem; }
+  .mode-grid { grid-template-columns: 1fr; }
+  .subject-grid { grid-template-columns: 1fr; }
+  .header-right { font-size: 0.78rem; gap: 8px; }
+  .panel { padding: 20px 18px; }
+  .stat-box .value { font-size: 1.3rem; }
+  .result-score .big { font-size: 2.8rem; }
 }
-
-function toggleFlag() {
-  const i = state.currentIndex;
-  state.flagged[i] = !state.flagged[i];
-  saveProgress();
-  render();
-}
-
-function nextQuestion() {
-  if (state.currentIndex < state.questions.length - 1) {
-    state.currentIndex++;
-    saveProgress();
-    render();
-    if (
-      state.mode === "practice" &&
-      state.currentIndex >= state.questions.length - 2 &&
-      state.questions.length < TOTAL_QUESTIONS &&
-      !state.loading
-    ) {
-      state.batchNumber++;
-      loadQuestions();
-    }
-  }
-}
-
-function prevQuestion() {
-  if (state.currentIndex > 0) {
-    state.currentIndex--;
-    saveProgress();
-    render();
-  }
-}
-
-/* TIMER */
-function startTimer() {
-  stopTimer();
-  state.timer = EXAM_DURATION;
-  state.timerInterval = setInterval(() => {
-    state.timer--;
-    if (state.timer <= 0) {
-      stopTimer();
-      finishExam();
-    } else {
-      updateTimerDisplay();
-    }
-  }, 1000);
-}
-
-function stopTimer() {
-  if (state.timerInterval) {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-  }
-}
-
-function updateTimerDisplay() {
-  const el = document.getElementById("timerDisplay");
-  if (!el) return;
-  el.textContent = formatTime(state.timer);
-  const wrap = el.closest(".timer");
-  if (wrap) {
-    wrap.classList.remove("warning", "danger");
-    if (state.timer <= 60) wrap.classList.add("danger");
-    else if (state.timer <= 300) wrap.classList.add("warning");
-  }
-}
-
-function formatTime(s) {
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-}
-
-function finishExam() {
-  stopTimer();
-  state.view = "result";
-  render();
-}
-
-/* RENDER */
-function render() {
-  const app = document.getElementById("app");
-  const headerRight = document.getElementById("headerRight");
-
-  if (state.view === "exam" && state.timerInterval) {
-    headerRight.innerHTML = `<div class="timer"><span id="timerDisplay">${formatTime(state.timer)}</span></div>`;
-  } else {
-    headerRight.innerHTML = "";
-  }
-
-  if (state.view === "home") app.innerHTML = renderHome();
-  else if (state.view === "subject") app.innerHTML = renderSubject();
-  else if (state.view === "practice") app.innerHTML = renderPractice();
-  else if (state.view === "exam") app.innerHTML = renderExam();
-  else if (state.view === "textbook") app.innerHTML = renderTextbook();
-  else if (state.view === "result") app.innerHTML = renderResult();
-  else if (state.view === "stats") app.innerHTML = renderStats();
-}
-
-function renderHome() {
-  const stats = getStats();
-  const saved = loadProgress();
-  let resumeBanner = "";
-
-  if (saved && saved.subject && saved.questions && saved.questions.length > 0) {
-    const subj = SUBJECTS.find(s => s.id === saved.subject);
-    if (subj) {
-      resumeBanner = `
-        <div class="panel" style="border-color: var(--accent); background: rgba(79,140,255,0.05);">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-            <div>
-              <h2>Resume Session</h2>
-              <p class="sub-text" style="margin:0;">
-                ${subj.name} · ${saved.mode === "exam" ? "Exam Mode" : "Practice"} · Q${saved.currentIndex + 1} of ${saved.questions.length}
-              </p>
-            </div>
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="resumeSession()">Resume</button>
-              <button class="btn" onclick="discardSession()">Discard</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  return `
-    <div class="hero">
-      <h1>STPM Pro</h1>
-      <p>Exam preparation platform · 5 subjects · AI-powered</p>
-    </div>
-    ${resumeBanner}
-    <div class="panel" style="margin-bottom:20px;">
-      <div class="btn-row between" style="align-items:center;">
-        <div>
-          <h2>Your Progress</h2>
-          <p class="sub-text" style="margin:0;">Track your performance across subjects</p>
-        </div>
-        <button class="btn" onclick="state.view='stats'; render();">View Stats</button>
-      </div>
-    </div>
-    <div class="subject-grid">
-      ${SUBJECTS.map(s => {
-        const st = stats[s.id];
-        const pct = st && st.total > 0 ? Math.round((st.correct / st.total) * 100) : null;
-        return `
-          <div class="subject-card" onclick="selectSubject('${s.id}')">
-            <div class="s-icon">${s.icon}</div>
-            <h3>${s.name}</h3>
-            <p>${pct !== null ? `${pct}% accuracy · ${st.total} attempted` : "Not started"}</p>
-          </div>
-        `;
-      }).join("")}
-    </div>
-  `;
-}
-
-function renderSubject() {
-  const subj = state.subject;
-  const stats = getStats()[subj.id];
-
-  return `
-    <div class="hero" style="text-align:left; margin-bottom:20px;">
-      <h1 style="font-size:1.5rem;">${subj.name}</h1>
-      <p>${stats && stats.total > 0 ? `Accuracy: ${Math.round((stats.correct/stats.total)*100)}% (${stats.correct}/${stats.total})` : "No attempts yet"}</p>
-    </div>
-
-    <div class="panel">
-      <h2>Select Semester</h2>
-      <p class="sub-text">Choose the semester you want to focus on</p>
-      <div class="btn-row">
-        ${SEMESTERS.map(sem => `
-          <button class="btn ${state.semester === sem ? 'btn-primary' : ''}" onclick="setSemester('${sem}')">
-            ${sem}
-          </button>
-        `).join("")}
-      </div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('practice')">Practice & Exam</button>
-      <button class="tab" onclick="switchTab('textbook')">Textbook</button>
-    </div>
-
-    <div class="mode-grid">
-      <div class="mode-card" onclick="selectMode('practice')">
-        <h3>Practice Mode</h3>
-        <p>100 questions · Instant feedback · Explanations · No time limit</p>
-      </div>
-      <div class="mode-card" onclick="selectMode('exam')">
-        <h3>Exam Mode</h3>
-        <p>100 questions · 90 minute timer · No feedback until submission</p>
-      </div>
-    </div>
-  `;
-}
-
-function renderPractice() {
-  if (state.loading && state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Generating questions...</div>`;
-  }
-  if (state.error) {
-    return `
-      <div class="alert error">${escapeHtml(state.error)}</div>
-      <button class="btn btn-primary" onclick="loadQuestions()">Retry</button>
-    `;
-  }
-  if (state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Loading...</div>`;
-  }
-
-  const i = state.currentIndex;
-  const q = state.questions[i];
-  const revealed = state.revealed[i];
-  const flagged = state.flagged[i];
-  const total = Math.max(TOTAL_QUESTIONS, state.questions.length);
-  const progressPct = ((i + 1) / total) * 100;
-  const explanation = state.explanations[i];
-
-  return `
-    <div class="q-header">
-      <span>Question <strong style="color:var(--text)">${i + 1}</strong> of ${total}</span>
-      <button class="btn" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleFlag()">
-        ${flagged ? "★ Flagged" : "☆ Flag"}
-      </button>
-    </div>
-    <div class="q-progress"><div class="q-progress-fill" style="width:${progressPct}%"></div></div>
-
-    <div class="panel">
-      <div class="q-text">${escapeHtml(q.question)}</div>
-      ${Object.entries(q.options).map(([letter, text]) => {
-        let cls = "option";
-        if (revealed) {
-          if (letter === q.answer) cls += " correct";
-          else if (state.answers[i] === letter) cls += " wrong";
-        } else if (state.answers[i] === letter) {
-          cls += " selected";
-        }
-        return `
-          <div class="${cls}" onclick="selectAnswer('${letter}')">
-            <div class="option-letter">${letter}</div>
-            <div>${escapeHtml(text)}</div>
-          </div>
-        `;
-      }).join("")}
-
-      ${!revealed ? `
-        <div class="btn-row" style="margin-top:16px;">
-          <button class="btn btn-primary" onclick="revealAnswer()" ${!state.answers[i] ? 'disabled' : ''}>Show Answer</button>
-        </div>
-      ` : `
-        <div class="btn-row" style="margin-top:16px;">
-          <button class="btn btn-primary" onclick="loadExplanation(${i})">${explanation ? "Refresh Explanation" : "Explain"}</button>
-        </div>
-      `}
-
-      ${explanation ? `<div class="explanation">${escapeHtml(explanation)}</div>` : ""}
-      ${revealed && state.loading && !explanation ? `<div class="loading-box"><div class="loader"></div> Loading explanation...</div>` : ""}
-    </div>
-
-    <div class="btn-row between">
-      <button class="btn" onclick="prevQuestion()" ${i === 0 ? "disabled" : ""}>← Previous</button>
-      <button class="btn btn-primary" onclick="nextQuestion()" ${i >= state.questions.length - 1 && state.questions.length >= TOTAL_QUESTIONS ? "disabled" : ""}>Next →</button>
-    </div>
-  `;
-}
-
-function renderExam() {
-  if (state.loading && state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Generating exam questions...</div>`;
-  }
-  if (state.error) {
-    return `
-      <div class="alert error">${escapeHtml(state.error)}</div>
-      <button class="btn btn-primary" onclick="loadQuestions()">Retry</button>
-    `;
-  }
-  if (state.questions.length === 0) {
-    return `<div class="loading-box"><div class="loader"></div> Loading...</div>`;
-  }
-
-  const i = state.currentIndex;
-  const q = state.questions[i];
-  const flagged = state.flagged[i];
-  const answered = Object.keys(state.answers).length;
-  const total = state.questions.length;
-  const progressPct = ((i + 1) / total) * 100;
-
-  return `
-    <div class="q-header">
-      <span>Question <strong style="color:var(--text)">${i + 1}</strong> of ${total} · Answered: ${answered}</span>
-      <button class="btn" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleFlag()">
-        ${flagged ? "★ Flagged" : "☆ Flag"}
-      </button>
-    </div>
-    <div class="q-progress"><div class="q-progress-fill" style="width:${progressPct}%"></div></div>
-
-    <div class="panel">
-      <div class="q-text">${escapeHtml(q.question)}</div>
-      ${Object.entries(q.options).map(([letter, text]) => {
-        let cls = "option";
-        if (state.answers[i] === letter) cls += " selected";
-        return `
-          <div class="${cls}" onclick="selectAnswer('${letter}')">
-            <div class="option-letter">${letter}</div>
-            <div>${escapeHtml(text)}</div>
-          </div>
-        `;
-      }).join("")}
-    </div>
-
-    <div class="btn-row between">
-      <button class="btn" onclick="prevQuestion()" ${i === 0 ? "disabled" : ""}>← Previous</button>
-      <button class="btn btn-primary" onclick="nextQuestion()" ${i >= total - 1 ? "disabled" : ""}>Next →</button>
-    </div>
-
-    <div style="margin-top:20px; text-align:center;">
-      <button class="btn btn-success" onclick="finishExam()">Submit Exam</button>
-    </div>
-  `;
-}
-
-function renderTextbook() {
-  if (state.loading && !state.textbookContent) {
-    return `<div class="loading-box"><div class="loader"></div> Generating textbook notes...</div>`;
-  }
-  if (state.error) {
-    return `
-      <div class="alert error">${escapeHtml(state.error)}</div>
-      <button class="btn btn-primary" onclick="loadTextbook()">Retry</button>
-    `;
-  }
-  if (!state.textbookContent) {
-    return `<div class="loading-box"><div class="loader"></div> Loading...</div>`;
-  }
-
-  return `
-    <div class="panel">
-      <div class="textbook-content">${escapeHtml(state.textbookContent)}</div>
-    </div>
-    <button class="btn" onclick="switchTab('practice')">← Back to Practice</button>
-  `;
-}
-
-function renderResult() {
-  const total = state.questions.length;
-  let correct = 0;
-  for (let i = 0; i < total; i++) {
-    if (state.answers[i] === state.questions[i].answer) correct++;
-  }
-  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-  let grade = "F";
-  if (pct >= 80) grade = "A";
-  else if (pct >= 70) grade = "B";
-  else if (pct >= 60) grade = "C";
-  else if (pct >= 50) grade = "D";
-  else if (pct >= 40) grade = "E";
-
-  return `
-    <div class="panel">
-      <div class="result-score">
-        <div class="big">${pct}%</div>
-        <div class="grade">Grade: ${grade} · ${correct} / ${total} correct</div>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="selectSubject('${state.subject.id}')">Back to Subject</button>
-      <button class="btn" onclick="goHome()">Home</button>
-    </div>
-  `;
-}
-
-function renderStats() {
-  const stats = getStats();
-  const totalAttempts = Object.values(stats).reduce((sum, s) => sum + s.total, 0);
-  const totalCorrect = Object.values(stats).reduce((sum, s) => sum + s.correct, 0);
-  const overallPct = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
-
-  return `
-    <div class="hero" style="text-align:left; margin-bottom:20px;">
-      <h1 style="font-size:1.5rem;">Statistics</h1>
-      <p>Your performance overview</p>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="label">Total Attempts</div>
-        <div class="value">${totalAttempts}</div>
-      </div>
-      <div class="stat-box">
-        <div class="label">Correct</div>
-        <div class="value green">${totalCorrect}</div>
-      </div>
-      <div class="stat-box">
-        <div class="label">Overall Accuracy</div>
-        <div class="value">${overallPct}%</div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>By Subject</h2>
-      <p class="sub-text">Breakdown per subject</p>
-      ${SUBJECTS.map(s => {
-        const st = stats[s.id] || { correct: 0, total: 0 };
-        const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
-        return `
-          <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
-            <span>${s.name}</span>
-            <span style="color:var(--text-dim); font-size:0.85rem;">${st.correct}/${st.total} · ${pct}%</span>
-          </div>
-        `;
-      }).join("")}
-    </div>
-
-    <button class="btn" onclick="goHome()">← Back to Home</button>
-  `;
-}
-
-/* INIT */
-render();
