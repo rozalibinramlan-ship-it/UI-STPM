@@ -38,7 +38,6 @@ header {
 .brand {
   font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: -0.3px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -66,7 +65,6 @@ header {
   margin: 0 auto;
   padding: 28px 20px 60px;
 }
-
 .hero { text-align: center; margin-bottom: 36px; }
 .hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.6px; margin-bottom: 8px; }
 .hero p { color: var(--text-dim); font-size: 0.95rem; }
@@ -104,7 +102,6 @@ header {
 }
 .subject-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
 .subject-card p { font-size: 0.8rem; color: var(--text-dim); }
-
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -114,7 +111,6 @@ header {
 }
 .panel h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
 .panel .sub-text { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 18px; }
-
 .tabs {
   display: flex;
   gap: 4px;
@@ -138,7 +134,6 @@ header {
 }
 .tab:hover { color: var(--text); }
 .tab.active { background: var(--panel-2); color: var(--text); font-weight: 600; }
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -156,11 +151,10 @@ header {
 .btn:hover:not(:disabled) { background: #232b45; border-color: #33405f; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: #0a0e17; font-weight: 600; }
-.btn-primary:hover:not(:disabled) { background: var(--accent-2); border-color: var(--accent-2); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-2); }
 .btn-success { background: var(--green); border-color: var(--green); color: #052e16; font-weight: 600; }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-row.between { justify-content: space-between; }
-
 .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 .mode-card {
   background: var(--panel-2);
@@ -174,7 +168,6 @@ header {
 .mode-card:hover { border-color: var(--accent); background: #1e2540; }
 .mode-card h3 { font-size: 0.98rem; font-weight: 600; margin-bottom: 6px; }
 .mode-card p { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; }
-
 .q-header {
   display: flex;
   justify-content: space-between;
@@ -219,7 +212,6 @@ header {
 .option.selected .option-letter { background: var(--accent); border-color: var(--accent); color: #0a0e17; }
 .option.correct .option-letter { background: var(--green); border-color: var(--green); color: #052e16; }
 .option.wrong .option-letter { background: var(--red); border-color: var(--red); color: #450a0a; }
-
 .explanation {
   margin-top: 16px;
   padding: 18px;
@@ -236,7 +228,6 @@ header {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .textbook-content {
   font-size: 0.92rem;
   line-height: 1.75;
@@ -244,7 +235,6 @@ header {
   font-family: Georgia, "Times New Roman", serif;
   color: #d4dce8;
 }
-
 .timer {
   display: flex;
   align-items: center;
@@ -260,7 +250,6 @@ header {
 .timer.warning { border-color: var(--yellow); color: var(--yellow); }
 .timer.danger { border-color: var(--red); color: var(--red); animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-
 .loader {
   display: inline-block;
   width: 14px; height: 14px;
@@ -279,7 +268,6 @@ header {
   color: var(--text-dim);
   font-size: 0.9rem;
 }
-
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -302,7 +290,6 @@ header {
 .stat-box .value { font-size: 1.5rem; font-weight: 700; }
 .stat-box .value.green { color: var(--green); }
 .stat-box .value.red { color: var(--red); }
-
 .result-score { text-align: center; padding: 30px 20px; }
 .result-score .big {
   font-size: 3.5rem;
@@ -315,7 +302,6 @@ header {
   margin-bottom: 8px;
 }
 .result-score .grade { font-size: 1rem; color: var(--text-dim); margin-bottom: 20px; }
-
 .alert {
   padding: 12px 16px;
   border-radius: 8px;
@@ -325,9 +311,7 @@ header {
 }
 .alert.error { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
 .alert.info { background: rgba(79,140,255,0.08); border-color: rgba(79,140,255,0.3); color: #93b8ff; }
-
 .hidden { display: none !important; }
-
 @media (max-width: 600px) {
   .container { padding: 20px 14px 40px; }
   .hero h1 { font-size: 1.5rem; }

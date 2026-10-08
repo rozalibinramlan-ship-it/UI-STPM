@@ -11,7 +11,6 @@ const SUBJECTS = [
 ];
 
 const SEMESTERS = ["Semester 1", "Semester 2", "Semester 3"];
-const BATCH_SIZE = 10;
 const TOTAL_QUESTIONS = 100;
 const EXAM_DURATION = 90 * 60;
 
@@ -88,7 +87,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/* ===== NAVIGATION ===== */
+/* NAVIGATION */
 function goHome() {
   stopTimer();
   state.view = "home";
@@ -183,7 +182,7 @@ function discardSession() {
   goHome();
 }
 
-/* ===== API CALLS ===== */
+/* API */
 async function loadQuestions() {
   state.loading = true;
   state.error = null;
@@ -211,7 +210,7 @@ async function loadQuestions() {
     render();
   } catch (err) {
     state.loading = false;
-    state.error = err.message || "Failed to load questions.";
+    state.error = err.message || "Failed to load questions. Please wait a moment and try again.";
     render();
   }
 }
@@ -264,14 +263,14 @@ async function loadTextbook() {
     if (data.error) throw new Error(data.error);
     state.textbookContent = data.notes;
   } catch (err) {
-    state.error = err.message || "Failed to load textbook.";
+    state.error = err.message || "Failed to load textbook. Please wait a moment and try again.";
   } finally {
     state.loading = false;
     render();
   }
 }
 
-/* ===== ANSWER ===== */
+/* ANSWER */
 function selectAnswer(letter) {
   const i = state.currentIndex;
   const q = state.questions[i];
@@ -327,7 +326,7 @@ function prevQuestion() {
   }
 }
 
-/* ===== TIMER ===== */
+/* TIMER */
 function startTimer() {
   stopTimer();
   state.timer = EXAM_DURATION;
@@ -373,7 +372,7 @@ function finishExam() {
   render();
 }
 
-/* ===== RENDER ===== */
+/* RENDER */
 function render() {
   const app = document.getElementById("app");
   const headerRight = document.getElementById("headerRight");
@@ -543,7 +542,6 @@ function renderPractice() {
       ${!revealed ? `
         <div class="btn-row" style="margin-top:16px;">
           <button class="btn btn-primary" onclick="revealAnswer()" ${!state.answers[i] ? 'disabled' : ''}>Show Answer</button>
-          <button class="btn" onclick="loadExplanation(${i})" ${!revealed ? 'disabled' : ''}>Explain</button>
         </div>
       ` : `
         <div class="btn-row" style="margin-top:16px;">
@@ -714,5 +712,5 @@ function renderStats() {
   `;
 }
 
-/* ===== INIT ===== */
+/* INIT */
 render();
