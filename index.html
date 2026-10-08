@@ -1,23 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>STPM Pro — Exam Preparation Platform</title>
-<link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belajar AI Halal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#14171c;display:flex;justify-content:center;padding:12px;font-family:'Inter',-apple-system,sans-serif;min-height:100vh}
+.app{width:100%;max-width:410px;background:#23272f;border:1px solid #3a3f4a;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.header{background:linear-gradient(180deg,#2e333d 0%,#23272f 100%);padding:18px 18px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #3a3f4a}
+.logo-wrap{width:52px;height:52px;border-radius:50%;border:2px solid #c9a86a;padding:2px;background:#1a1d23;flex-shrink:0}
+.logo-wrap img{width:100%;height:100%;border-radius:50%;object-fit:cover;filter:grayscale(0.2) sepia(0.3) brightness(1.1)}
+.header-text{flex:1}
+.header-text h1{color:#e8dcc6;font-size:17px;font-weight:800;letter-spacing:1.5px}
+.header-text p{color:#8b8f98;font-size:10px;letter-spacing:2px;margin-top:2px}
+.gold-dot{width:8px;height:8px;background:#c9a86a;border-radius:50%;box-shadow:0 0 10px #c9a86a}
+.content{padding:14px}
+.profile-row{background:#2a2f39;border:1px solid #3a3f4a;border-radius:16px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.profile-left{display:flex;align-items:center;gap:10px}
+.profile-icon{width:36px;height:36px;background:linear-gradient(135deg,#c9a86a,#8c6a3a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.profile-name{color:#e8dcc6;font-weight:700;font-size:13px}
+.profile-sub{color:#6b707a;font-size:10px}
+.btn-edit-small{width:32px;height:32px;background:#2e333d;border:1px solid #3a3f4a;border-radius:9px;color:#8b8f98;cursor:pointer}
+.label{color:#8b8f98;font-size:9px;letter-spacing:2px;font-weight:700;margin:16px 0 8px}
+.sem-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.sem-btn{padding:10px 6px;background:#2a2f39;border:1px solid #3a3f4a;border-radius:12px;color:#8b8f98;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s}
+.sem-btn.active{background:linear-gradient(135deg,#c9a86a,#a8824a);color:#1a1200;border-color:#c9a86a;box-shadow:0 4px 15px rgba(201,168,106,0.3)}
+.subjek-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subjek-card{background:#2a2f39;border:1px solid #3a3f4a;border-radius:14px;padding:12px 10px;cursor:pointer;transition:0.2s;position:relative;overflow:hidden}
+.subjek-card:before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--accent)}
+.subjek-card.biru{--accent:#5b8def}
+.subjek-card.amber{--accent:#c9a86a}
+.subjek-card.emerald{--accent:#34d399}
+.subjek-card.rose{--accent:#fb7185}
+.subjek-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.subjek-card.active{border-color:var(--accent);background:#323845;box-shadow:0 0 20px rgba(0,0,0,0.3)}
+.subjek-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.subjek-code{font-size:11px;font-weight:800;color:#e8dcc6}
+.subjek-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.subjek-name{font-size:9px;color:#8b8f98;line-height:1.3}
+.view{background:#1e222a;border:1px solid #3a3f4a;border-radius:16px;padding:14px;margin-top:14px;min-height:200px;color:#a1a6b0;font-size:12px;line-height:1.7}
+.tabs{display:flex;background:#1e222a;border:1px solid #3a3f4a;border-radius:12px;padding:4px;margin-top:14px;gap:4px}
+.tab{flex:1;padding:9px;border-radius:9px;border:none;background:transparent;color:#6b707a;font-size:11px;font-weight:700;cursor:pointer}
+.tab.active{background:#c9a86a;color:#1a1200}
+.chat-box{max-height:260px;overflow-y:auto;margin-bottom:10px}
+.msg{padding:9px 12px;border-radius:12px;margin-bottom:8px;font-size:11px;line-height:1.5}
+.msg.ai{background:#2a2f39;border:1px solid #3a3f4a}
+.msg.user{background:#c9a86a;color:#1a1200;margin-left:20px;text-align:right}
+.input-bar{display:flex;gap:8px}
+.input-bar input{flex:1;background:#2a2f39;border:1px solid #3a3f4a;border-radius:12px;padding:10px 14px;color:#e8dcc6;outline:none;font-size:11px}
+.input-bar button{background:#c9a86a;border:none;border-radius:12px;padding:10px 16px;font-weight:800;color:#1a1200;cursor:pointer;font-size:11px}
+.hidden{display:none}
+</style>
 </head>
 <body>
-
-<header>
-  <div class="brand" onclick="goHome()">
-    <div class="brand-mark">S</div>
-    <span>STPM Pro</span>
+<div class="app">
+  <div class="header">
+    <div class="logo-wrap"><img src="logo.png" alt="logo"></div>
+    <div class="header-text"><h1>BELAJAR AI</h1><p>DIPLOMA HALAL • SEM 1-5</p></div>
+    <div class="gold-dot"></div>
   </div>
-  <div class="header-right" id="headerRight"></div>
-</header>
 
-<div class="container" id="app"></div>
+  <div class="content">
+    <div class="profile-row">
+      <div class="profile-left">
+        <div class="profile-icon">🎓</div>
+        <div><div class="profile-name" id="namaUser">Pelajar Halal</div><div class="profile-sub">Pelajar Aktif</div></div>
+      </div>
+      <button class="btn-edit-small" onclick="const n=prompt('Nama:',document.getElementById('namaUser').innerText); if(n) document.getElementById('namaUser').innerText=n">✎</button>
+    </div>
 
-<script src="app.js"></script>
+    <div class="label">SEMESTER</div>
+    <div class="sem-grid" id="semGrid"></div>
+
+    <div class="label">SUBJEK • KLIK UNTUK BUKA</div>
+    <div class="subjek-grid" id="subjekGrid"></div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabBuku" onclick="switchTab('buku')">📖 BUKU</button>
+      <button class="tab" id="tabChat" onclick="switchTab('chat')">💬 TANYA AI</button>
+    </div>
+
+    <div id="viewBuku" class="view">Pilih subjek untuk mula belajar...</div>
+    <div id="viewChat" class="view hidden">
+      <div class="chat-box" id="chatBox"><div class="msg ai">Assalamualaikum! Tanya apa saja tentang <b id="chatSubjek">-</b> 👋</div></div>
+      <div class="input-bar"><input id="soalan" placeholder="Taip soalan..." onkeypress="if(event.key==='Enter') tanyaAI()"><button onclick="tanyaAI()">HANTAR</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const dataSem={'Sem 1':['CTU101','ISC100','ISC102','ISH101','LCC111','MAT112'],'Sem 2':['CSC134','CTU152','ISC101','ISC152','ISC200','ISH150'],'Sem 3':['CTU263','IMU202','ISC151','ISH202','ISH203','LCC113'],'Sem 4':['ENT300','IMU102','ISC201','ISH250','ISH252','ISH253'],'Sem 5':['ISC251','ISH301','ISH304','ISH305','ISH306']};
+const subjekInfo={'CTU101':'Fundamental Islam','ISC100':'Aqidah','ISC102':'Ulum Quran','ISH101':'Halal Consumerism','LCC111':'English I','MAT112':'Business Math','CSC134':'Computer Info','CTU152':'Values & Civilization','ISC101':'Akhlaq','ISC152':'Ulum Hadith','ISC200':'Tarikh Tasyri','ISH150':'Food Science','CTU263':'Islam & Mgmt','IMU202':'Islamic Economics','ISC151':'Usul Fiqh','ISH202':'Halal Business','ISH203':'Purification','LCC113':'English III','ENT300':'Entrepreneurship','IMU102':'Fiqh Muamalat','ISC201':'Qawaid Fiqhiyah','ISH250':'Fiqh Muasarah','ISH252':'Halal Standard','ISH253':'Halal Logistics','ISC251':'Dirasah Nassiyah','ISH301':'Slaughtering','ISH304':'Regulatory','ISH305':'Quality Assurance','ISH306':'Industrial Training'};
+let semAktif='Sem 3', subjekAktif='ISH202', tab='buku';
+function renderSem(){const g=document.getElementById('semGrid');g.innerHTML='';Object.keys(dataSem).forEach(s=>{const b=document.createElement('button');b.className='sem-btn'+(s===semAktif?' active':'');b.innerText=s;b.onclick=()=>{semAktif=s;subjekAktif=dataSem[s][0];renderSem();renderSubjek();bukaBuku()};g.appendChild(b)})}
+function renderSubjek(){const g=document.getElementById('subjekGrid');g.innerHTML='';const cols=['biru','amber','emerald','rose'];dataSem[semAktif].forEach((kod,i)=>{const d=document.createElement('div');d.className=`subjek-card ${cols[i%4]}${kod===subjekAktif?' active':''}`;d.innerHTML=`<div class="subjek-top"><span class="subjek-code">${kod}</span><span class="subjek-dot"></span></div><div class="subjek-name">${subjekInfo[kod]||''}</div>`;d.onclick=()=>{subjekAktif=kod;renderSubjek();bukaBuku();document.getElementById('chatSubjek').innerText=kod};g.appendChild(d)})}
+function switchTab(t){tab=t;document.getElementById('viewBuku').classList.toggle('hidden',t!=='buku');document.getElementById('viewChat').classList.toggle('hidden',t!=='chat');document.getElementById('tabBuku').classList.toggle('active',t==='buku');document.getElementById('tabChat').classList.toggle('active',t==='chat');if(t==='chat')document.getElementById('chatSubjek').innerText=subjekAktif}
+async function bukaBuku(){switchTab('buku');const v=document.getElementById('viewBuku');v.innerHTML=`⏳ Menjana buku teks <b>${subjekAktif}</b>...`;try{const r=await fetch('/api/buku-teks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subjek:subjekAktif,tahap:semAktif})});const j=await r.json();if(j.status==='success'){const d=j.data;v.innerHTML=`<div style="color:#c9a86a;font-weight:800;font-size:13px;margin-bottom:8px">${d.tajuk}</div><div style="white-space:pre-line">${d.kandungan}</div><div style="margin-top:14px;background:#2a2f39;border:1px solid #3a3f4a;border-radius:12px;padding:12px"><div style="color:#c9a86a;font-weight:700;font-size:11px;margin-bottom:8px">✦ LATIHAN: ${d.latihan.soalan}</div>${d.latihan.pilihan.map((p,i)=>`<button onclick="if(${i}===${d.latihan.jawapan_betul}){this.style.background='#c9a86a';this.style.color='#1a1200'}else{this.style.background='#3a1f1f';this.style.color='#fb7185'}" style="display:block;width:100%;text-align:left;padding:8px 10px;margin:4px 0;border-radius:9px;border:1px solid #3a3f4a;background:#23272f;color:#a1a6b0;cursor:pointer;font-size:11px">${p}</button>`).join('')}<div style="margin-top:8px;color:#6b707a;font-size:10px">${d.latihan.penjelasan}</div></div>`}else v.innerHTML='❌ '+j.message}catch(e){v.innerHTML='❌ Ralat: '+e.message}}
+async function tanyaAI(){const inp=document.getElementById('soalan');const q=inp.value.trim();if(!q)return;const box=document.getElementById('chatBox');box.innerHTML+=`<div class="msg user">${q}</div>`;inp.value='';box.innerHTML+=`<div class="msg ai" id="ld">⏳...</div>`;box.scrollTop=box.scrollHeight;try{const r=await fetch('/api/tanya',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({soalan:q,subjek:subjekAktif,tahap:semAktif})});const j=await r.json();document.getElementById('ld')?.remove();box.innerHTML+=`<div class="msg ai">${(j.jawapan||'').replace(/\n/g,'<br>')}</div>`;box.scrollTop=box.scrollHeight}catch(e){document.getElementById('ld')?.remove();box.innerHTML+=`<div class="msg ai">❌ Ralat</div>`}}
+renderSem();renderSubjek();bukaBuku();
+</script>
 </body>
 </html>
