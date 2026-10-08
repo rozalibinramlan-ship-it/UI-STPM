@@ -10,6 +10,7 @@ app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(__dirname));
 
+// ====== SUBJEK STPM ======
 const SUBJECTS = {
   physics:   "Physics STPM",
   biology:   "Biology STPM",
@@ -18,6 +19,7 @@ const SUBJECTS = {
   chemistry: "Chemistry STPM"
 };
 
+// ====== GROQ API KEYS ======
 function getApiKeys() {
   return [
     process.env.GROQ_KEY_1,
@@ -31,15 +33,16 @@ let currentKeyIndex = 0;
 
 function getNextKey() {
   const keys = getApiKeys();
-  if (keys.length === 0) throw new Error("No GROQ_KEY set.");
+  if (keys.length === 0) throw new Error("Tiada GROQ_KEY diset.");
   const key = keys[currentKeyIndex % keys.length];
   currentKeyIndex++;
   return key;
 }
 
+// ====== PANGGIL GROQ ======
 async function callGroq(prompt, maxTokens = 4096, attempt = 0) {
   const keys = getApiKeys();
-  if (keys.length === 0) throw new Error("No GROQ_KEY set.");
+  if (keys.length === 0) throw new Error("Tiada GROQ_KEY diset.");
 
   const apiKey = getNextKey();
   const url = "https://api.groq.com/openai/v1/chat/completions";
@@ -52,7 +55,7 @@ async function callGroq(prompt, maxTokens = 4096, attempt = 0) {
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: "You are an STPM examiner and tutor. Follow instructions exactly." },
           { role: "user", content: prompt }
@@ -65,18 +68,18 @@ async function callGroq(prompt, maxTokens = 4096, attempt = 0) {
     if (res.status === 429 || res.status === 503) {
       if (attempt < 5) {
         const wait = (attempt + 1) * 2000;
-        console.log(`Rate limited (${res.status}). Retry ${attempt + 1} in ${wait}ms`);
+        console.log(`Rate limited (${res.status}). Retry ${attempt + 1} dalam ${wait}ms`);
         await new Promise(r => setTimeout(r, wait));
         return callGroq(prompt, maxTokens, attempt + 1);
       }
-      throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+      throw new Error("Rate limit exceeded. Sila tunggu sebentar dan cuba lagi.");
     }
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error?.message || "Groq API error");
 
     const text = data.choices?.[0]?.message?.content || "";
-    if (!text) throw new Error("Empty response from AI.");
+    if (!text) throw new Error("Tiada respons dari AI.");
     return text;
   } catch (err) {
     if (attempt < 3 && !err.message.includes("Rate limit")) {
@@ -88,10 +91,11 @@ async function callGroq(prompt, maxTokens = 4096, attempt = 0) {
   }
 }
 
+// ====== JANA 10 SOALAN ======
 app.post("/api/questions", async (req, res) => {
   try {
     const { subject, semester, batchNumber = 1 } = req.body;
-    if (!subject) return res.status(400).json({ error: "Subject is required." });
+    if (!subject) return res.status(400).json({ error: "Subjek diperlukan." });
 
     const subjectName = SUBJECTS[subject] || subject;
 
@@ -132,13 +136,13 @@ Rules:
     try { parsed = JSON.parse(cleaned); }
     catch (e) {
       return res.status(500).json({
-        error: "Failed to parse AI response. Please try again.",
+        error: "Gagal parse respons AI. Sila cuba lagi.",
         preview: cleaned.slice(0, 300)
       });
     }
 
     if (!parsed.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-      return res.status(500).json({ error: "Invalid question format from AI." });
+      return res.status(500).json({ error: "Format soalan tak sah dari AI." });
     }
 
     const valid = parsed.questions.filter(q =>
@@ -148,7 +152,7 @@ Rules:
       ["A", "B", "C", "D"].includes(q.answer)
     );
 
-    if (valid.length === 0) return res.status(500).json({ error: "No valid questions generated." });
+    if (valid.length === 0) return res.status(500).json({ error: "Tiada soalan sah dijana." });
 
     res.json({ questions: valid });
   } catch (err) {
@@ -157,10 +161,11 @@ Rules:
   }
 });
 
+// ====== HURAIAN JAWAPAN ======
 app.post("/api/explain", async (req, res) => {
   try {
     const { subject, question, options, answer } = req.body;
-    if (!question || !answer) return res.status(400).json({ error: "Question and answer required." });
+    if (!question || !answer) return res.status(400).json({ error: "Soalan dan jawapan diperlukan." });
 
     const optionsText = Object.entries(options || {}).map(([k, v]) => `${k}) ${v}`).join("\n");
 
@@ -193,10 +198,11 @@ Keep it concise, exam-focused, and academic.`;
   }
 });
 
+// ====== BUKU TEKS ======
 app.post("/api/textbook", async (req, res) => {
   try {
     const { subject, semester } = req.body;
-    if (!subject) return res.status(400).json({ error: "Subject is required." });
+    if (!subject) return res.status(400).json({ error: "Subjek diperlukan." });
 
     const subjectName = SUBJECTS[subject] || subject;
 
@@ -241,24 +247,27 @@ Requirements:
   }
 });
 
+// ====== HEALTH CHECK ======
 app.get("/api/health", (req, res) => {
   const keys = getApiKeys();
   res.json({
     status: "ok",
     service: "STPM Pro",
     provider: "groq",
+    model: "openai/gpt-oss-120b",
     time: new Date().toISOString(),
     keyCount: keys.length,
     hasApiKey: keys.length > 0
   });
 });
 
+// ====== FALLBACK ======
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.listen(PORT, () => {
   const keys = getApiKeys();
-  console.log(`✅ STPM Pro running on port ${PORT}`);
+  console.log(`✅ STPM Pro berjalan di port ${PORT}`);
   console.log(`🔑 Groq keys loaded: ${keys.length}`);
 });
