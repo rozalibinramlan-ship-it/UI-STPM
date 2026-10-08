@@ -1,18 +1,17 @@
 {
-  "name": "belajar-ai-halal-grey-gold",
-  "version": "2.0.0",
-  "type": "module",
-  "description": "Belajar AI Halal - Grey Gold Original Design + GROQ",
+  "name": "stpm-pro",
+  "version": "1.0.0",
+  "description": "STPM Pro - AI Exam Preparation Platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
   }
 }
